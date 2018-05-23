@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "naudiodon",
+      "target_name": "naudiodon-lame",
       "sources": [
         "src/naudiodon.cc",
         "src/GetDevices.cc",
@@ -9,7 +9,7 @@
       	"src/AudioOut.cc"
       ],
       "include_dirs": [
-        "<!(node -e \"require('nan')\")", "portaudio/include"
+        "<!(node -e \"require('nan')\")", "portaudio/include", "lame"
       ],
       "conditions" : [
         [
@@ -28,14 +28,16 @@
             },
             "link_settings": {
               "libraries": [
-                "<@(module_root_dir)/build/Release/libportaudio.dylib"
+                "<@(module_root_dir)/build/Release/libportaudio.dylib",
+                "<@(module_root_dir)/build/Release/libmp3lame.dylib"
               ]
             },
             "copies": [
               {
                 "destination": "build/Release/",
                 "files": [
-                  "<!@(ls -1 portaudio/bin/libportaudio.dylib)"
+                  "<!@(ls -1 portaudio/bin/libportaudio.dylib)",
+                  "<!@(ls -1 lame/libmp3lame.dylib)"
                 ]
               }
             ]
@@ -54,13 +56,15 @@
               }
             },
             "libraries": [
-               "-l../portaudio/bin/portaudio_x64.lib"
+               "-l../portaudio/bin/portaudio_x64.lib",
+               "<@(module_root_dir)/build/Release/libmp3lame.dll"
             ],
             "copies": [
               {
                 "destination": "build/Release",
                 "files": [
-                  "portaudio/bin/portaudio_x64.dll"
+                  "portaudio/bin/portaudio_x64.dll",
+                  "lame/libmp3lame.dll"
                 ]
               }
             ]
@@ -72,7 +76,7 @@
               ['target_arch=="arm"', {
                 "link_settings": {
                   "libraries": [
-                    "<@(module_root_dir)/build/Release/libportaudio.so.2" 
+                    "<@(module_root_dir)/build/Release/libportaudio.so.2"
                   ],
                   "ldflags": [
                     "-L<@(module_root_dir)/build/Release",
