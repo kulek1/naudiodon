@@ -22,10 +22,20 @@
 #include <condition_variable>
 #include <map>
 #include <portaudio.h>
+#include <lame/lame.h>
 
 using namespace v8;
 
 namespace streampunk {
+
+  // LAME MP3 BUFFER
+  const int MP3_SIZE = 8820;
+  unsigned char lameMp3Buffer[MP3_SIZE];
+  short int pcmBigBuffer[MP3_SIZE];
+  int BUFFER_FULL_AT = 10;
+  int readPointer = 0;
+  int bufferCounter = 0;
+  int writeData = 0;
 
 static std::map<char*, std::shared_ptr<Memory> > outstandingAllocs;
 static void freeAllocCb(char* data, void* hint) {
@@ -45,6 +55,7 @@ public:
       Nan::ThrowError(err.c_str());
     }
 
+    printf("\n*** LAME VERSION ***\n");
     printf("Input %s\n", mAudioOptions->toString().c_str());
 
     PaStreamParameters inParams;
@@ -89,6 +100,8 @@ public:
       std::string err = std::string("Could not open stream: ") + Pa_GetErrorText(errCode);
       Nan::ThrowError(err.c_str());
     }
+
+    initLameEncoder();
   }
 
   ~InContext() {
@@ -113,13 +126,85 @@ public:
     return mChunkQueue.dequeue();
   }
 
-  bool readBuffer(const void *srcBuf, uint32_t frameCount) {
-    const uint8_t *src = (uint8_t *)srcBuf;
-    uint32_t bytesAvailable = frameCount * mAudioOptions->channelCount() * mAudioOptions->sampleFormat() / 8;
-    std::shared_ptr<Memory> dstBuf = Memory::makeNew(bytesAvailable);
-    memcpy(dstBuf->buf(), src, bytesAvailable);
+  int lameEncodeBuffer() {
+    int writeCode = lame_encode_buffer_interleaved(lameMp3, pcmBigBuffer, MP3_SIZE / 2, lameMp3Buffer, MP3_SIZE);
+    // printf("\nWrite code: %d\n", writeCode);
+
+    bufferCounter = 0;
+    readPointer = 0;
+    if (writeCode == -1) printf("[LAME] ENCODING ERROR\n");
+    return writeCode;
+  }
+
+  void lameCloseEncoding() {
+    lame_encode_flush(lameMp3, lameMp3Buffer, MP3_SIZE);
+    lame_close(lameMp3);
+    // fclose(mp3File);
+    printf("\n\n*** CLOSING FILE ***\n");
+  }
+
+  bool readBuffer(const void *srcBuf, uint32_t frameCount)
+  {
+    uint32_t bytesAvailable = frameCount * mAudioOptions->channelCount() * mAudioOptions->sampleFormat() / 8; // at the moment 1764
+    short int *pcm_buffer = (short int *)srcBuf;
+
+    memcpy(pcmBigBuffer + readPointer, pcm_buffer, frameCount * 2 * 2);
+
+    readPointer += frameCount * 2; // 441 * 2
+    bufferCounter++;
+
+    if (bufferCounter == BUFFER_FULL_AT) writeData = lameEncodeBuffer(); // when the buffer is full then fire lame encoder
+    else return 1;
+
+    std::shared_ptr<Memory> dstBuf = Memory::makeNew(writeData);
+    memcpy(dstBuf->buf(), (short int*) lameMp3Buffer, writeData);
     mChunkQueue.enqueue(dstBuf);
     return mActive;
+  }
+
+  void initLameEncoder()
+  {
+    if (lame_set_in_samplerate(lameMp3, 44100)) {
+      return Nan::ThrowError("LAME set in samplerate failed");
+    }
+    if (lame_set_out_samplerate(lameMp3, 44100)) {
+      return Nan::ThrowError("LAME set out samplerate failed");
+    }
+    /*
+    if (lame_set_VBR(lameMp3, vbr_default)) {
+      return Nan::ThrowError("LAME set VBR failed");
+    } */
+    if (lame_set_brate(lameMp3, 192)) {
+      return Nan::ThrowError("LAME set bitrate failed");
+    }
+    if(lame_set_num_channels(lameMp3, 2) == -1) {
+      return Nan::ThrowError("LAME set channels failed");
+    }
+    if(lame_set_mode(lameMp3, STEREO) == -1) {
+      return Nan::ThrowError("LAME set mode failed");
+    }
+    // if (lame_set_disable_reservoir(lameMp3, TRUE) == -1) {
+    //   return Nan::ThrowError("LAME disable reservoir failed");
+    // }
+    if(lame_set_quality(lameMp3, 2) == -1) {
+      return Nan::ThrowError("LAME set quality failed");
+    }
+    lame_set_errorf(lameMp3, &lame_error);
+    lame_set_debugf(lameMp3, &lame_debug);
+
+    if(lame_init_params(lameMp3) == -1) {
+      return Nan::ThrowError("LAME init params failed...");
+    }
+  }
+
+  /* Callback functions for each type of lame message callback */
+  static void lame_error(const char *fmt, va_list list)
+  {
+    printf("LAME ERROR: %s\n", fmt);
+  }
+  static void lame_debug(const char *fmt, va_list list)
+  {
+    printf("LAME DEB: %s\n", fmt);
   }
 
   void checkStatus(uint32_t statusFlags) {
@@ -156,6 +241,9 @@ private:
   std::string mErrStr;
   mutable std::mutex m;
   std::condition_variable cv;
+
+  // LAME
+  lame_t lameMp3 = lame_init();
 };
 
 int InCallback(const void *input, void *output, unsigned long frameCount,
