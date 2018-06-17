@@ -16,7 +16,7 @@
 const util = require("util");
 const EventEmitter = require("events");
 const { Readable, Writable } = require('stream');
-const portAudioBindings = require("bindings")("naudiodon.node");
+const portAudioBindings = require("bindings")("naudiodon-lame.node");
 
 // var SegfaultHandler = require('segfault-handler');
 // SegfaultHandler.registerHandler("crash.log");
