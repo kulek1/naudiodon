@@ -1,4 +1,4 @@
-# Naudiodon
+# Naudiodon LAME MP3
 
 A [Node.js](http://nodejs.org/) [addon](http://nodejs.org/api/addons.html) that provides a wrapper around the [PortAudio](http://portaudio.com/) library, enabling an application to record and play audio with cross platform support. With this library, you can create [node.js streams](https://nodejs.org/dist/latest-v6.x/docs/api/stream.html) that can be piped to or from other streams, such as files and network connections. This library supports back-pressure.
 
@@ -7,10 +7,12 @@ This is a fork of [node-portaudio](/joeferner/node-portaudio), refactored by:
 * changing from an event model to a stream model;
 * linking to the v8 libraries through the [Native Abstractions for Node.js (NAN)](/nodejs/nan) library to enable more portability between node versions.
 * adding in local copies of libraries so that portaudio does not have to be installed preemptively.
+* adding mp3 support
 
 Little of the original remains but I am very grateful for Joe Ferner for the inspiration and framework to get started.
 
-This library has been tested on MacOS X 10.11, Windows 10, Linux Ubuntu Trusty and Raspbian Jessie (`armhf` architecture).
+This library has been tested on MacOS X 10.13, Windows 10, Linux Ubuntu Trusty and Raspbian Jessie (`armhf` architecture).
+Compiled mp3 libraries have only been tested on MacOS 10.13.
 
 Note: This is a server side library. It is not intended as a means to play and record audio via a browser.
 
@@ -142,6 +144,9 @@ process.on('SIGINT', () => {
   ai.quit();
 });
 ```
+
+## MP3
+The bitrate is currently fixed at 192 kbps. Dynamic changes of bitrate might be available in the future version.
 
 ## Troubleshooting
 
