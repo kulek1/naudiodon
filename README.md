@@ -33,7 +33,7 @@ For Raspberry Pi users, please note that this library is not intended for use wi
 To get list of supported devices, call the `getDevices()` function.
 
 ```javascript
-var portAudio = require('naudiodon');
+const portAudio = require('naudiodon');
 
 console.log(portAudio.getDevices());
 ```
@@ -88,11 +88,11 @@ var ao = new portAudio.AudioOutput({
   channelCount: 2,
   sampleFormat: portAudio.SampleFormat16Bit,
   sampleRate: 48000,
-  deviceId : -1 // Use -1 or omit the deviceId to select the default device
+  deviceId : -1, // Use -1 or omit the deviceId to select the default device
 });
 
 // handle errors from the AudioOutput
-ao.on('error', err => console.error);
+ao.on('error', err => console.error(err));
 
 // Create a stream to pipe into the AudioOutput
 // Note that this does not strip the WAV header so a click will be heard at the beginning
@@ -111,22 +111,24 @@ ao.start();
 Recording audio invovles reading from an instance of `AudioInput`.
 
 ```javascript
-var fs = require('fs');
-var portAudio = require('../index.js');
+const fs = require('fs');
+const portAudio = require('../index.js');
 
 // Create an instance of AudioInput, which is a ReadableStream
-var ai = new portAudio.AudioInput({
+const ai = new portAudio.AudioInput({
   channelCount: 2,
   sampleFormat: portAudio.SampleFormat16Bit,
   sampleRate: 44100
   deviceId : -1 // Use -1 or omit the deviceId to select the default device
+  bitRate: 320, // kbps
+  lameQuality: 2, // Valid values: 2, 5, 7
 });
 
 // handle errors from the AudioInput
-ai.on('error', err => console.error);
+ai.on('error', err => console.error(err));
 
 // Create a write stream to write out to a raw audio file
-var ws = fs.createWriteStream('rawAudio.raw');
+const ws = fs.createWriteStream('rawAudio.raw');
 
 //Start streaming
 ai.pipe(ws);
@@ -146,7 +148,19 @@ process.on('SIGINT', () => {
 ```
 
 ## MP3
-The bitrate is currently fixed at 192 kbps. Dynamic changes of bitrate might be available in the future version.
+`naudiodon-lame` adds new properties to set in `portAudio.AudioInput` method: `bitRate` and `lameQuality`.
+
+* `bitRate`: default value: 192
+* `lameQuality`: default value: 5
+
+`lameQuality` - internal algorithm selection.
+<b>In a nutshell:</b> Selecting cheap or expensive algorithms for decoding.:
+
+| Value | Description |
+| ------------- | ------------- |
+| 2  | near-best quality, not too slow  |
+| 5 | good quality, fast  |
+| 7 | ok quality, really fast  |
 
 ## Troubleshooting
 
