@@ -55,7 +55,7 @@ protected:
     if (Nan::Null() != val)
       result = Nan::To<uint32_t>(val).FromJust();
     return result;
-  } 
+  }
 
   std::string unpackStr(Local<Object> tags, const std::string& key, std::string dflt) {
     std::string result = dflt;
@@ -63,7 +63,7 @@ protected:
     if (Nan::Null() != val)
       result = *String::Utf8Value(val);
     return result;
-  } 
+  }
 
 private:
   Params(const Params &);
@@ -77,7 +77,9 @@ public:
       mSampleRate(unpackNum(tags, "sampleRate", 44100)),
       mChannelCount(unpackNum(tags, "channelCount", 2)),
       mSampleFormat(unpackNum(tags, "sampleFormat", 8)),
-      mMaxQueue(unpackNum(tags, "maxQueue", 2))
+      mMaxQueue(unpackNum(tags, "maxQueue", 2)),
+      mBitRate(unpackNum(tags, "bitRate", 192)),
+      mLameQuality(unpackNum(tags, "lameQuality", 5))
   {}
   ~AudioOptions() {}
 
@@ -86,8 +88,10 @@ public:
   uint32_t channelCount() const  { return mChannelCount; }
   uint32_t sampleFormat() const  { return mSampleFormat; }
   uint32_t maxQueue() const  { return mMaxQueue; }
+  uint32_t bitRate() const  { return mBitRate; }
+  uint32_t lameQuality() const  { return mLameQuality; }
 
-  std::string toString() const  { 
+  std::string toString() const  {
     std::stringstream ss;
     ss << "audio options: ";
     if (mDeviceID == 0xffffffff)
@@ -97,7 +101,9 @@ public:
     ss << "sample rate " << mSampleRate << ", ";
     ss << "channels " << mChannelCount << ", ";
     ss << "bits per sample " << mSampleFormat << ", ";
-    ss << "max queue " << mMaxQueue;
+    ss << "max queue " << mMaxQueue << ", ";
+    ss << "bitrate " << mBitRate << ", ";
+    ss << "lame quality " << mLameQuality;
     return ss.str();
   }
 
@@ -107,6 +113,8 @@ private:
   uint32_t mChannelCount;
   uint32_t mSampleFormat;
   uint32_t mMaxQueue;
+  uint32_t mBitRate;
+  uint32_t mLameQuality;
 };
 
 } // namespace streampunk

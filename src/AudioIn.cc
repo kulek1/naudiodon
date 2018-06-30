@@ -164,20 +164,16 @@ public:
 
   void initLameEncoder()
   {
-    if (lame_set_in_samplerate(lameMp3, 44100)) {
+    if (lame_set_in_samplerate(lameMp3, mAudioOptions->sampleRate())) {
       return Nan::ThrowError("LAME set in samplerate failed");
     }
-    if (lame_set_out_samplerate(lameMp3, 44100)) {
+    if (lame_set_out_samplerate(lameMp3, mAudioOptions->sampleRate())) {
       return Nan::ThrowError("LAME set out samplerate failed");
     }
-    /*
-    if (lame_set_VBR(lameMp3, vbr_default)) {
-      return Nan::ThrowError("LAME set VBR failed");
-    } */
-    if (lame_set_brate(lameMp3, 192)) {
+    if (lame_set_brate(lameMp3, mAudioOptions->bitRate())) {
       return Nan::ThrowError("LAME set bitrate failed");
     }
-    if(lame_set_num_channels(lameMp3, 2) == -1) {
+    if(lame_set_num_channels(lameMp3, mAudioOptions->channelCount()) == -1) {
       return Nan::ThrowError("LAME set channels failed");
     }
     if(lame_set_mode(lameMp3, STEREO) == -1) {
@@ -186,8 +182,8 @@ public:
     // if (lame_set_disable_reservoir(lameMp3, TRUE) == -1) {
     //   return Nan::ThrowError("LAME disable reservoir failed");
     // }
-    if(lame_set_quality(lameMp3, 2) == -1) {
-      return Nan::ThrowError("LAME set quality failed");
+    if(lame_set_quality(lameMp3, mAudioOptions->lameQuality()) == -1) {
+      return Nan::ThrowError("LAME set quality failed. Valid values: 2, 5, 7");
     }
     lame_set_errorf(lameMp3, &lame_error);
     lame_set_debugf(lameMp3, &lame_debug);
