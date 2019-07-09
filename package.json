@@ -25,7 +25,7 @@
   "devDependencies": {
     "tape": "^4.9.0"
   },
-  "author": "Streampunk Media Ltd, Mateusz Kuliński",
+  "author": "Streampunk Media Ltd, kulek1",
   "license": "Apache-2.0",
   "scripts": {
     "install": "node-gyp rebuild"
