@@ -1,6 +1,6 @@
 {
   "name": "naudiodon-lame",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Node Stream bindings for PortAudio with MP3 Encoding.",
   "main": "./index.js",
   "keywords": [
@@ -30,5 +30,8 @@
   "scripts": {
     "install": "node-gyp rebuild"
   },
-  "gypfile": true
+  "gypfile": true,
+  "engines": {
+    "node": "^8"
+  }
 }
